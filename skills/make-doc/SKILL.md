@@ -229,6 +229,8 @@ Pro decision navíc:
 - Server automaticky zdědí `author` ze starého dokumentu, zapíše symetrické log záznamy,
   vytvoří vazbu `supersedes` a změní status starého dokumentu na `superseded`.
 
+> **Pozor na `reason.type` pro supersede.** Povolené typy jsou `due_to_document`, `external_input`, `reorganization` — **ne** `extraction_from_chat`. Pro supersede iniciované z chatu (typický případ v `/make-doc`) použij `external_input`.
+
 **`mark_stale`** (výstup ze subagenta `doc_mark_stale`) → volej `doc_mark_stale`:
 - `id`: `target_id` z JSON návrhu
 - `reason`: z JSON návrhu
