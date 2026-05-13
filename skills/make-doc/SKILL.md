@@ -22,6 +22,7 @@ Skill používá MCP server `strata`. Před prvním krokem ověř, že nástroje
 Projdi aktuální konverzaci od začátku (nebo od posledního `/make-doc`, pokud jsi ho v session už spouštěl) a hledej následující signály:
 
 - **Rozhodnutí** — výroky typu "rozhodneme se pro X", "vybíráme Y místo Z", explicitní volby technologie/přístupu/architektury
+- **Záměry** — propracované návrhy čekající na rozhodnutí: "chceme přidat X", "navrhujeme Y", "zvažujeme Z". Záměr se liší od rozhodnutí tím, že rozhodnutí nepadlo. Záměr se liší od spec tím, že věc ještě neexistuje a není schválena.
 - **Instalace a konfigurace** — výsledky bash příkazů (`apt install`, `npm install`, `docker run`, `git clone`), vytvořené nebo upravené config soubory, env proměnné, deployment kroky
 - **Návody** — sekvence kroků, které lze zopakovat, kde výsledek má hodnotu pro budoucí použití
 - **Krizová řešení** — debugování, kde řešení stojí za zaznamenání jako runbook (co se stalo, jak to opravit)
@@ -36,7 +37,7 @@ Z analýzy sestav seznam kandidátů. **Maximálně 5 nejvýznamnějších** v j
 
 Pro každý kandidát uveď:
 - pořadové číslo
-- navržený typ v hranatých závorkách (`decision`, `howto`, `config`, `runbook`)
+- navržený typ v hranatých závorkách (`decision`, `howto`, `config`, `runbook`, `proposal`, ...)
 - krátký popis kandidáta
 - důvod, proč to navrhuješ (z čeho v konverzaci to plyne)
 
@@ -217,6 +218,9 @@ Pro decision navíc:
 - `chosen: [string]` — slugy vybraných technologií
 - `considered: [{tool, reason_short}]` — slugy zamítnutých technologií s důvody (10–120 znaků)
 
+Pro proposal navíc:
+- `realized_by: [string]` — IDs dokumentů realizujících záměr. **Nevytěžuj automaticky při vzniku** — toto pole se vyplňuje až po realizaci záměru, ne při jeho zápisu. Pokud konverzace popisuje záměr, který ještě čeká na rozhodnutí, nechej pole prázdné.
+
 **`update`** (výstup ze subagenta `doc_update`) → volej `doc_update`:
 - `id`: `target_id` z JSON návrhu
 - `patch`: z JSON návrhu (jen změněná pole — server provede merge)
@@ -321,6 +325,7 @@ Konkrétní příklady vstupu pro `doc_write` jsou ve složce `examples/`:
 - `examples/tool.md` — dokumentace nástroje nebo technologie (stav, licence)
 - `examples/reference.md` — odkaz na externí zdroj (URL, specifikace, RFC)
 - `examples/glossary.md` — definice pojmu specifického pro projekt
+- `examples/proposal.md` — záměr čekající na rozhodnutí (s volitelným `realized_by`)
 
 **Načítej příklady jen podle potřeby** — pokud zpracováváš kandidát typu `decision`, otevři `examples/decision.md`. Není nutné číst všechny.
 

@@ -67,6 +67,12 @@ vztah k dokumentu nejasný) → **`doc_mark_stale`**.
 
 `mark_stale` není slabá volba — je to správná odpověď na nejistotu.
 
+### Speciální případ — typ `proposal`
+
+- **Přidání `realized_by`** k existujícímu proposal → vždy `doc_update`, nikdy supersede. Záměr splnil svou roli a zůstává jako historický záznam, nenahrazuje se.
+- **Změna podstaty záměru** (jiný scope, jiné řešení) → supersede (starý proposal jako historický záznam, nový ho nahradí).
+- **Nastavení `status: outdated`** (zamítnutí, odložení, stažení) → **ruční akt autora**. Nenavrhuj autonomně. Pokud záměr ztrácí relevanci, navrhni `doc_update` s poznámkou, ale nechej finální rozhodnutí na uživateli.
+
 ---
 
 ## Výběr `reason.type`
