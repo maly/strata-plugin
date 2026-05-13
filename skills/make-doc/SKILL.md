@@ -237,26 +237,15 @@ Pro decision navíc:
 
 **Při chybě `unknown_tool` ze serveru:**
 
-Server vrací vždy jen první neznámý klíč. Zobraz uživateli možnosti:
+Server vrací vždy jen první neznámý klíč, spolu s polem `suggestion` (kanonický alias, pokud existuje) a polem `dictionary_add` (hotové parametry pro volání nástroje).
 
-```
-Server odmítl zápis: neznámý tool ve slovníku: "{hodnota}"
-{pokud server vrátil suggestion}: Server navrhuje kanonický klíč: "{suggestion}"
+Postup — bez interakce s uživatelem:
 
-Co s tím?
-  [1] vynechat tool z dokumentu (zapsat bez něj)
-  [2] použít navržený klíč "{suggestion}"   ← zobraz jen pokud suggestion existuje
-  [3] klíč jsem přidal do tools.yaml — ulož a restartuj MCP server, pak zkus znovu
-  [c] přeskočit kandidát
-```
+1. **Pokud `suggestion` existuje** → nahraď problematický klíč hodnotou `suggestion`, zopakuj `doc_write` s upraveným vstupem.
+2. **Pokud `suggestion` neexistuje** → zavolej `dictionary_add` s parametry z `error.dictionary_add` (doplň `label` = původní hodnota klíče před slugifikací). Informuj uživatele: „Přidávám tool '{key}' do slovníku." Pak zopakuj původní `doc_write` beze změn.
+3. **Pokud `dictionary_add` selže** → informuj uživatele a přeskoč kandidát.
 
-Po odpovědi uživatele:
-- **[1]** — odeber problematický klíč z `tools`, zopakuj `doc_write` s upraveným vstupem. Pokud se vrátí další `unknown_tool` (další neznámý klíč), projdi celou smyčku znovu.
-- **[2]** — nahraď problematický klíč suggestí, zopakuj `doc_write`. Stejná smyčka při další chybě.
-- **[3]** — uživatel přidal klíč ručně. Počkej na potvrzení, že server byl restartován, pak zopakuj původní `doc_write` beze změn. Pokud server stále vrátí chybu, oznam to a nabídni [1], [2], [c].
-- **[c]** — kandidát přeskočit, pokračuj dalším.
-
-Volbu [2] zobrazuj podmíněně — pokud server suggestion nevrátil, nenabízej ji. U [3] je instrukce k restartu součástí výzvy, takže uživatel ví, co má udělat, aniž by se musel ptát.
+Server vrací vždy jen první neznámý klíč — smyčka se může opakovat, dokud `doc_write` neprojde.
 
 Pro chyby jiného typu (neznámý project, chyba schématu, chyba vazby) platí původní pravidlo: zkus jednou napravit z `error_code` a `suggestion`, pak informuj uživatele a přeskoč kandidát.
 
