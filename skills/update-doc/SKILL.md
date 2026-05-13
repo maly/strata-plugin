@@ -73,6 +73,14 @@ vztah k dokumentu nejasný) → **`doc_mark_stale`**.
 - **Změna podstaty záměru** (jiný scope, jiné řešení) → supersede (starý proposal jako historický záznam, nový ho nahradí).
 - **Nastavení `status: outdated`** (zamítnutí, odložení, stažení) → **ruční akt autora**. Nenavrhuj autonomně. Pokud záměr ztrácí relevanci, navrhni `doc_update` s poznámkou, ale nechej finální rozhodnutí na uživateli.
 
+### Speciální případ — typ `overview`
+
+- **Doplnění nebo oprava `covers`** u existujícího overview → obvykle `doc_update`, nikdy automaticky supersede. Overview je mapa přes dokumenty; změna pokrytí je běžná údržba.
+- **Zachování `covers`** je povinné, pokud nová informace nemění pokryté dokumenty. V patchi je nemusíš uvádět; server je zachová.
+- **Nový `covers` seznam** uváděj jen když se pokrytí opravdu mění. Musí obsahovat minimálně dvě existující ID dokumentů.
+- **Změna `scope`** je `doc_update`, pokud jde o zpřesnění stejné oblasti. Pokud se mění na jinou oblast a titulek/slug by už neseděl, použij pravidlo slug/titulek a navrhni `doc_supersede`.
+- `scope` a `covers` jsou pole volání `doc_update`, ne položky uvnitř `type_specific`. V JSON návrhu je můžeš dát do `patch`; orchestrátor/server je sloučí do vstupu `doc_update`.
+
 ---
 
 ## Výběr `reason.type`
@@ -107,6 +115,29 @@ Vrať **jeden JSON objekt**. Žádný text před nebo za objektem. Žádné mark
     "body": "# Rozhodnutí\n\n..."
   },
   "rationale": "Obsah se rozšiřuje o nový detail bez změny podstaty. Slug zůstává přesný."
+}
+```
+
+### Varianta A2 — update overview covers/scope
+
+```json
+{
+  "operation": "doc_update",
+  "target_id": "prehled-overview-typu-strata-8f21",
+  "reason": {
+    "type": "refinement",
+    "note": "Doplněn nový dokument, který patří do přehledu typu overview."
+  },
+  "patch": {
+    "scope": "Typ overview ve Strata dokumentaci a serveru",
+    "covers": [
+      "plan-overview-type-2026",
+      "decision-overview-covers",
+      "spec-overview-frontmatter"
+    ],
+    "body": "# Přehled typu overview\n\n..."
+  },
+  "rationale": "Jde o údržbu mapy existujících dokumentů. Titulek a slug zůstávají přesné, proto stačí doc_update."
 }
 ```
 
