@@ -8,7 +8,7 @@
       "name": "strata",
       "source": {
         "source": "local",
-        "path": "./.claude-plugin"
+        "path": "./strata"
       },
       "policy": {
         "installation": "AVAILABLE",
