@@ -1,5 +1,9 @@
 {
   "name": "strata-plugin-dev",
+  "owner": {
+    "name": "Martin Maly",
+    "email": "martin.maly@gmail.com"
+  },
   "interface": {
     "displayName": "Strata Plugin Dev"
   },
