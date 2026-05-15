@@ -28,6 +28,8 @@ Projdi aktuální konverzaci od začátku (nebo od posledního `/make-doc`, poku
 - **Návody** — sekvence kroků, které lze zopakovat, kde výsledek má hodnotu pro budoucí použití
 - **Krizová řešení** — debugování, kde řešení stojí za zaznamenání jako runbook (co se stalo, jak to opravit)
 
+- **Realizace specifikace** — retrospektivní záznam implementace existující spec: "udělali jsme X podle spec Y", "feature je hotová a odpovídá spec Z". Vzniká jako `implementation` s povinnou vazbou `implements` na konkrétní spec.
+
 **Nehledej** signály pro typ `source` — surovou konverzaci skill nezapisuje, to dělá separátní vytěžovací proces.
 
 **Hledej i v tool calls**, ne jen v textu konverzace. Pro `config` a deployment kroky je často nejdůležitější to, co bylo skutečně provedeno v shellu, ne to, co bylo řečeno.
@@ -228,6 +230,12 @@ Pro overview navíc:
 - Nevytvářej overview bez konkrétních `covers`. Pokud máš jen obecné téma a méně než dva dokumenty, zvol jiný typ nebo kandidát přeskoč.
 - `covers` neposílej jako běžné `links`; server z něj vytvoří interní vazby automaticky.
 
+Pro implementation navíc:
+- `links` musí obsahovat právě **jeden** objekt `{ rel: 'implements', to: '<spec_id>' }`. Bez tohoto linku server odmítne zápis chybou `missing_implements`. Před zápisem najdi cílovou spec přes `doc_search` nebo `doc_read` a ověř její ID.
+- Jedna spec může mít nejvýše jednu implementaci — pokud server vrátí `implementation_already_exists`, informuj uživatele a přeskoč kandidát.
+- `type_specific.status` je `ongoing` (výchozí) nebo `complete`. Pokud z konverzace plyne, že implementace je dokončena, nastav `complete`; jinak nechej výchozí nebo vynech.
+- `implementation` **nelze** vytvořit přes `doc_supersede` — server to odmítne. Při aktualizaci stavu (ongoing → complete) použij `doc_update`.
+
 **`update`** (výstup ze subagenta `doc_update`) → volej `doc_update`:
 - `id`: `target_id` z JSON návrhu
 - `patch`: z JSON návrhu (jen změněná pole — server provede merge)
@@ -334,6 +342,7 @@ Konkrétní příklady vstupu pro `doc_write` jsou ve složce `examples/`:
 - `examples/glossary.md` — definice pojmu specifického pro projekt
 - `examples/proposal.md` — záměr čekající na rozhodnutí (s volitelným `realized_by`)
 - `examples/overview.md` — přehled přes minimálně dva existující dokumenty (s povinnými `scope` a `covers`)
+- `examples/implementation.md` — retrospektivní záznam realizace spec (s povinným `implements` linkem)
 
 **Načítej příklady jen podle potřeby** — pokud zpracováváš kandidát typu `decision`, otevři `examples/decision.md`. Není nutné číst všechny.
 
