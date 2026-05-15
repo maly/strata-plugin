@@ -81,6 +81,13 @@ vztah k dokumentu nejasný) → **`doc_mark_stale`**.
 - **Změna `scope`** je `doc_update`, pokud jde o zpřesnění stejné oblasti. Pokud se mění na jinou oblast a titulek/slug by už neseděl, použij pravidlo slug/titulek a navrhni `doc_supersede`.
 - `scope` a `covers` jsou pole volání `doc_update`, ne položky uvnitř `type_specific`. V JSON návrhu je můžeš dát do `patch`; orchestrátor/server je sloučí do vstupu `doc_update`.
 
+### Speciální případ — typ `implementation`
+
+- **Změna stavu** (`ongoing` → `complete`) → vždy `doc_update`. Přidej do patche `type_specific: { status: 'complete' }`.
+- **Změna cílové spec** (jiná `implements` vazba) → `doc_supersede`. Vazba `implements` je konstitutivní — jiná spec znamená jiná implementace, jiný slug.
+- **`implementation` nelze supersede** přes `doc_supersede` API (server to odmítne). Pokud je potřeba nová implementace téže spec, uživatel musí vytvořit nový dokument přes `doc_write`.
+- **Nikdy nenavrhuj `doc_supersede` pro změnu statusu** — jde vždy o `doc_update`.
+
 ---
 
 ## Výběr `reason.type`
