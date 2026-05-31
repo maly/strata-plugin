@@ -222,7 +222,7 @@ Pro decision navíc:
 - `considered: [{tool, reason_short}]` — slugy zamítnutých technologií s důvody (10–120 znaků)
 
 Pro proposal navíc:
-- `realized_by: [string]` — IDs dokumentů realizujících záměr. **Nevytěžuj automaticky při vzniku** — toto pole se vyplňuje až po realizaci záměru, ne při jeho zápisu. Pokud konverzace popisuje záměr, který ještě čeká na rozhodnutí, nechej pole prázdné.
+- `realized_by: [string]` — IDs **specifikací**, které záměr formalizovaly (typ `spec`). **Nevytěžuj automaticky při vzniku** — toto pole se vyplňuje až poté, co spec existuje, ne při zápisu záměru. Pokud konverzace popisuje záměr, který ještě čeká na rozhodnutí, nechej pole prázdné. **Nikdy sem nedávej ID implementace** — řetězec je proposal → spec → implementation.
 
 Pro overview navíc:
 - `scope: string` — povinná oblast pokrytí, stručně pojmenovaná tak, aby bylo jasné, co overview zahrnuje.
