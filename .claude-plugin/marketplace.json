@@ -1,20 +1,14 @@
 {
   "name": "strata-plugin-dev",
+  "description": "Strata documentation system plugin for Claude Code — manage structured project documentation via MCP.",
   "owner": {
     "name": "Martin Maly",
     "email": "martin.maly@gmail.com"
-  },
-  "interface": {
-    "displayName": "Strata Plugin Dev"
   },
   "plugins": [
     {
       "name": "strata",
       "source": "./strata",
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
       "category": "Productivity"
     }
   ]
