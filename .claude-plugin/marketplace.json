@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "strata",
-      "source": ".",
+      "source": { "source": "github", "repo": "maly/strata-plugin", "ref": "master" },
       "category": "productivity"
     }
   ]
