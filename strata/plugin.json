@@ -1,0 +1,20 @@
+{
+  "name": "strata",
+  "description": "Strata skills",
+  "version": "1.5.1",
+  "author": {
+    "name": "Martin Malý",
+    "email": "martin.maly@gmail.com"
+  },
+  "homepage": "https://github.com/maly/strata-plugin",
+  "repository": "https://github.com/maly/strata-plugin",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "strata",
+    "knowledge-management",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "commands": "./commands/"
+}

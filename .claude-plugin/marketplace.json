@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "strata",
-      "source": "./strata",
+      "source": ".",
       "category": "Productivity"
     }
   ]
