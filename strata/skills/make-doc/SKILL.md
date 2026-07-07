@@ -148,6 +148,13 @@ source: make-doc
 | `doc_supersede` | `old_id`, `new_doc.title`, `new_doc.body`, `reason.type` |
 | `doc_mark_stale` | `target_id`, `reason.type` |
 
+Dále zkontroluj, že **hodnota** `reason.type` je z výčtu povoleného pro danou operaci (viz tabulka v kroku 7). Pokud není:
+
+1. Mapuj na nejbližší povolený typ — `reorganization` → `refactor`; `refinement`/`refactor` u `doc_mark_stale` → `external_input`.
+2. Jinak použij výchozí typ pro operaci (viz tabulka v kroku 7) a informuj uživatele, že jsi `reason.type` nahradil.
+
+Zkontroluj lokálně i pravidla pro `ref`: `extraction_from_bash` → ref povinný, `manual` → ref zakázaný, `due_to_document` → ref povinný.
+
 Pokud validace selže → **nezavolej server**. Zobraz uživateli:
 
 ```
@@ -195,9 +202,46 @@ Souhlasíš?
 
 Podle rozhodnutí (vlastního z kroku 5 nebo potvrzeného v kroku 6):
 
+#### Povolené `reason.type` podle operace
+
+Autoritativní zdroj je `changelog-matrix.yaml` na serveru (`docs-server/meta/schemas/changelog-matrix.yaml`). Kanonický výčet:
+
+| Operace | Povolené `reason.type` | Pravidla `ref` | Výchozí |
+|---|---|---|---|
+| `doc_write` | `extraction_from_chat`, `extraction_from_bash`, `import`, `manual` | `extraction_from_bash` = ref povinný, `manual` = ref **zakázaný**, jinak volitelný | `extraction_from_chat` |
+| `doc_update` | `due_to_document`, `refinement`, `external_input`, `extraction_from_chat`, `refactor` | `due_to_document` = ref povinný, jinak volitelný | `refinement` |
+| `doc_supersede` | `due_to_document`, `external_input`, `refinement`, `refactor` | vše volitelné | `external_input` |
+| `doc_mark_stale` | `due_to_document`, `external_input` | `due_to_document` = ref povinný, jinak volitelný | `external_input` |
+
+Pokud je `ref` uveden, musí to být ID dokumentu existujícího v systému — server jinak vrátí `reason_ref_not_found`. Typ `reorganization` neexistuje — správný název je `refactor`.
+
+#### Kontrola L1/L2 před zápisem
+
+Před každým voláním `doc_write` nebo `doc_supersede` zkontroluj návrhy `l1_draft` a `l2_draft`:
+
+- **L1 začíná podstatným jménem z whitelistu pro daný typ:**
+
+| Typ | Povolené začátky L1 |
+|---|---|
+| decision | Rozhodnutí, Volba, Změna |
+| spec | Specifikace, Popis, Návrh, Architektura |
+| config | Konfigurace, Nastavení, Instalace |
+| howto | Návod, Postup, Jak |
+| runbook | Runbook, Postup pro, Reakce na |
+| tool | Nástroj, Software |
+| reference | Odkaz, Externí zdroj |
+| glossary | Pojem, Definice |
+| source | Záznam, Konverzace |
+| proposal | Záměr, Návrh, Plán |
+
+  (Typy `overview` a `implementation` whitelist nemají — kontrola projde vždy.) Autoritativní zdroj je `meta/dictionaries/whitelist-starts.yaml` v docs-repo projektu — při pádu na `l1_bad_start` ověř aktuální stav tam.
+- **L1 dále:** klíčová vlastní jména (Keycloak, Zod, …) musí být **doslova v textu** `l1_draft`, ne jen v poli `tools`; entita jako token uvnitř věty, ne na začátku; bez znaků `/ _ { } @`; délka 60–200 znaků; tečka na konci.
+- **L2:** věty oddělené novým řádkem, ne výčty s čárkami; délka 200–1500 znaků.
+- Když serverová normalizace selže dvakrát, vezmi vlastní jednovětou formulaci verbatim.
+
 **`new`** → volej `doc_write`. Sestav vstup podle struktury MCP nástroje (viz `docs-api-spec.md`).
 
-Jako `reason` předej strukturovaný objekt — mapuj kontext volání:
+Jako `reason` předej strukturovaný objekt — který typ zvolit pro `doc_write` podle kontextu:
 
 | Kontext | `reason.type` |
 |---|---|
@@ -210,7 +254,7 @@ Výchozí hodnota je `extraction_from_chat`. Pokud uživatel poskytl hint, respe
 
 - `title` — krátký nadpis kandidáta
 - `author` — `claude-code`
-- `l1_draft`, `l2_draft` — návrh (server přepíše přes LLM normalizaci)
+- `l1_draft`, `l2_draft` — návrh (server přepíše přes LLM normalizaci); před odesláním projdi kontrolní seznam L1/L2 výše
 - `body` — markdown tělo s detaily z konverzace
 - `tools`, `projects` — extrahuj z konverzace, použij jen kanonické klíče (volitelně ověř přes `doc_list_dictionary`)
 - `component_hint` (volitelný): pokud agent v konverzaci explicitně zmínil konkrétní komponentu nebo oblast ("tohle je o panelu Ask"), předej tento hint sem. Jinak vynech pole nebo pošli `null`.
@@ -240,6 +284,8 @@ Pro implementation navíc:
 - `id`: `target_id` z JSON návrhu
 - `patch`: z JSON návrhu (jen změněná pole — server provede merge)
 - `reason`: z JSON návrhu
+- Pokud kandidát mění obsah dokumentu, `patch` musí obsahovat `body` — patch jen s metadaty (`l1_draft`, `l2_draft`, `links`, `covers`) nezmění viditelný obsah dokumentu. V takovém případě varuj uživatele.
+- Nikdy nepředávej `author` — server ho odmítne chybou `immutable_field`.
 
 **`supersede`** (výstup ze subagenta `doc_supersede`) → volej `doc_supersede`:
 - `old_id`: z JSON návrhu
@@ -248,7 +294,7 @@ Pro implementation navíc:
 - Server automaticky zdědí `author` ze starého dokumentu, zapíše symetrické log záznamy,
   vytvoří vazbu `supersedes` a změní status starého dokumentu na `superseded`.
 
-> **Pozor na `reason.type` pro supersede.** Povolené typy jsou `due_to_document`, `external_input`, `reorganization` — **ne** `extraction_from_chat`. Pro supersede iniciované z chatu (typický případ v `/make-doc`) použij `external_input`.
+> **Pozor na `reason.type` pro supersede.** Povolené typy jsou `due_to_document`, `external_input`, `refinement`, `refactor` — **ne** `extraction_from_chat`. Pro supersede iniciované z chatu (typický případ v `/make-doc`) použij `external_input`. Pokud uvádíš `reason.ref`, musí to být ID dokumentu existujícího v systému.
 
 **`mark_stale`** (výstup ze subagenta `doc_mark_stale`) → volej `doc_mark_stale`:
 - `id`: `target_id` z JSON návrhu
@@ -327,6 +373,8 @@ Pokud uživatel řekne "pokračuj" a žádné zbylé kandidáty nejsou, oznam to
 6. **Nehádej hodnoty slovníků.** Pokud nevíš, jestli `mongodb` nebo `mongo` je kanonický klíč, podívej se přes `doc_list_dictionary`. Server odmítne neznámé hodnoty s návrhem.
 
 7. **Linky vytváří uživatel nebo zjevný kontext.** Skill navrhne `supersedes` (z analýzy). Ostatní vazby (`implements`, `depends_on`, `references`) přidávej jen pokud jsou v konverzaci explicitně řečené nebo zjevné z kontextu (např. config implementující decision).
+
+8. **`reason` je vždy objekt.** Předávej **vždy** objekt `{type, note, ref?}`, nikdy holý string. `note` je povinné (jedna věta). `ref` uváděj jen tehdy, když znáš ID dokumentu existujícího v systému.
 
 ## Příklady frontmatteru
 

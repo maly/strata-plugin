@@ -92,14 +92,30 @@ vztah k dokumentu nejasný) → **`doc_mark_stale`**.
 
 ## Výběr `reason.type`
 
+Povolené typy jsou vázané na operaci — vybírej jen z podvýčtu pro zvolenou operaci:
+
+**`doc_update`:**
+
 | Situace | `reason.type` |
 |---|---|
 | Nová informace pochází z jiného dokumentu v systému | `due_to_document` |
-| Nová informace pochází z konverzace, e-mailu, externího rozhodnutí | `external_input` |
 | Zpřesnění nebo doplnění bez vnějšího podnětu | `refinement` |
+| Nová informace pochází z e-mailu nebo externího rozhodnutí | `external_input` |
+| Nová informace pochází z konverzace v Claude Code | `extraction_from_chat` |
 | Strukturální přeorganizování bez sémantické změny | `refactor` |
 
-`reason.ref` vyplň pokud znáš ID odkazovaného dokumentu v systému. Jinak pole vynech.
+**`doc_supersede`:**
+
+| Situace | `reason.type` |
+|---|---|
+| Nahrazení vyvolané jiným dokumentem v systému | `due_to_document` |
+| Nahrazení na základě konverzace, e-mailu, externího rozhodnutí | `external_input` |
+| Zpřesnění bez vnějšího podnětu | `refinement` |
+| Strukturální přeorganizování bez sémantické změny | `refactor` |
+
+**`doc_mark_stale`:** **jen** `due_to_document` (podnětem je jiný dokument v systému) a `external_input` (podnět zvenčí — konverzace, e-mail, externí rozhodnutí). `refinement` a `refactor` tu server záměrně nepovoluje — když víš, co opravit, použij update.
+
+`reason.ref` vyplň pokud znáš ID odkazovaného dokumentu v systému. Jinak pole vynech. Pro `due_to_document` je `ref` **povinný**. `ref` musí být ID dokumentu existujícího v systému — jinak server vrátí `reason_ref_not_found`.
 
 ---
 
@@ -191,7 +207,7 @@ Vrať **jeden JSON objekt**. Žádný text před nebo za objektem. Žádné mark
 |---|---|
 | `operation` | `doc_update` \| `doc_supersede` \| `doc_mark_stale` |
 | `rationale` | Lidsky čitelné odůvodnění — zobrazí se uživateli při potvrzení |
-| `reason` | Strukturovaný reason — `type` povinný, `ref` a `note` dle situace |
+| `reason` | Strukturovaný reason — `type` povinný a jeho hodnota musí být z podvýčtu pro zvolenou `operation` (viz sekce Výběr `reason.type`), `ref` a `note` dle situace |
 
 ---
 
